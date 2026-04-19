@@ -51,8 +51,10 @@
         btnSearchToggle: $('#btn-search-toggle'),
         searchInput: $('#search-input'),
 
-        // Export
+        // Export/Import
         btnExport: $('#btn-export'),
+        btnImportTrigger: $('#btn-import-trigger'),
+        importInput: $('#import-input'),
 
         // Modal
         modalOverlay: $('#modal-overlay'),
@@ -465,45 +467,53 @@
             return;
         }
 
-        // Group by date
-        const groups = {};
-        entries.forEach(e => {
-            if (!groups[e.date]) groups[e.date] = [];
-            groups[e.date].push(e);
-        });
-
-        let text = '═══════════════════════════════════════════\n';
-        text += '         📖 ENGLISH DIARY — NHẬT KÝ TIẾNG ANH\n';
-        text += '═══════════════════════════════════════════\n\n';
-
-        const sortedDates = Object.keys(groups).sort().reverse();
-        sortedDates.forEach(date => {
-            text += `\n📅 ${formatDate(date)}\n`;
-            text += '───────────────────────────────────────────\n';
-            groups[date].forEach((e, idx) => {
-                text += `\n  ${idx + 1}. 🇬🇧 ${e.english}\n`;
-                if (e.vietnamese) text += `     🇻🇳 ${e.vietnamese}\n`;
-                text += `     📁 ${CATEGORY_LABELS[e.category] || e.category}`;
-                if (e.source) text += `  |  📖 ${e.source}`;
-                text += `  |  🕐 ${formatTime(e.created)}\n`;
-                if (e.note) text += `     📝 ${e.note}\n`;
-            });
-            text += '\n';
-        });
-
-        text += `\n═══════════════════════════════════════════\n`;
-        text += `Tổng: ${entries.length} câu  |  ${sortedDates.length} ngày\n`;
-        text += `Xuất lúc: ${new Date().toLocaleString('vi-VN')}\n`;
-
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const dataStr = JSON.stringify(entries, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `english-diary-${getTodayStr()}.txt`;
+        a.download = `english-diary-backup-${getTodayStr()}.json`;
         a.click();
         URL.revokeObjectURL(url);
 
-        showToast('Đã xuất file thành công! 📥');
+        showToast('Đã xuất file dự phòng thành công! 📥');
+    }
+
+    // ── Import ──
+    function importData(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const importedEntries = JSON.parse(event.target.result);
+                
+                if (!Array.isArray(importedEntries)) {
+                    throw new Error('Định dạng file không hợp lệ');
+                }
+
+                // Simple merge logic: keep existing and add new ones (based on ID)
+                const existingIds = new Set(entries.map(e => e.id));
+                const newEntries = importedEntries.filter(e => !existingIds.has(e.id));
+                
+                if (newEntries.length === 0) {
+                    showToast('Không có câu mới nào để thêm!', 'info');
+                } else {
+                    entries = [...entries, ...newEntries];
+                    saveEntries();
+                    updateStats();
+                    renderTimeline();
+                    showToast(`Đã nhập thành công ${newEntries.length} câu! 🚀`);
+                }
+            } catch (err) {
+                showToast('Lỗi: File không đúng định dạng!', 'error');
+                console.error(err);
+            }
+            // Clear input
+            els.importInput.value = '';
+        };
+        reader.readAsText(file);
     }
 
     // ── Display current date ──
@@ -561,8 +571,10 @@
             }, 250);
         });
 
-        // Export
+        // Export/Import
         els.btnExport.addEventListener('click', exportData);
+        els.btnImportTrigger.addEventListener('click', () => els.importInput.click());
+        els.importInput.addEventListener('change', importData);
 
         // Filters
         els.filterPills.forEach(pill => {
