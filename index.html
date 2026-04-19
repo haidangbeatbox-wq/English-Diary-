@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Diary — Nhật Ký Tiếng Anh</title>
+    <meta name="description" content="Ứng dụng nhật ký ghi lại các câu tiếng Anh bạn học được mỗi ngày. Theo dõi tiến trình học tập của bạn.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background animated orbs -->
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="app-header" id="app-header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect x="4" y="3" width="24" height="26" rx="3" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 10h12M10 15h10M10 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="24" cy="24" r="7" fill="url(#grad)" stroke="currentColor" stroke-width="2"/>
+                        <path d="M22 24l2 2 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs>
+                            <linearGradient id="grad" x1="17" y1="17" x2="31" y2="31">
+                                <stop stop-color="#6366f1"/>
+                                <stop offset="1" stop-color="#a78bfa"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>English Diary</h1>
+                    <span class="logo-sub">Nhật Ký Tiếng Anh</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="search-wrapper" id="search-wrapper">
+                    <button class="btn-icon" id="btn-search-toggle" title="Tìm kiếm">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                    </button>
+                    <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm câu...">
+                </div>
+                <button class="btn-icon" id="btn-export" title="Xuất dữ liệu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <!-- Stats Bar -->
+        <section class="stats-bar" id="stats-bar">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-total">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="stat-total">0</span>
+                    <span class="stat-label">Tổng câu</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-today">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="stat-today">0</span>
+                    <span class="stat-label">Hôm nay</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-streak">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="stat-streak">0</span>
+                    <span class="stat-label">Ngày liên tiếp</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-days">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="stat-days">0</span>
+                    <span class="stat-label">Ngày đã học</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add New Entry Form -->
+        <section class="add-entry-section" id="add-entry-section">
+            <div class="add-entry-card">
+                <div class="add-entry-header">
+                    <div class="add-entry-date">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                        <span id="current-date-display"></span>
+                    </div>
+                    <span class="badge badge-new">+ Ghi chú mới</span>
+                </div>
+                <div class="form-group">
+                    <label for="input-english" class="form-label">
+                        <span class="flag">🇬🇧</span> Câu Tiếng Anh
+                    </label>
+                    <textarea id="input-english" class="form-textarea" rows="2" placeholder='e.g. "The early bird catches the worm."'></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="input-vietnamese" class="form-label">
+                        <span class="flag">🇻🇳</span> Nghĩa Tiếng Việt
+                    </label>
+                    <textarea id="input-vietnamese" class="form-textarea" rows="2" placeholder='e.g. "Con chim dậy sớm bắt được sâu."'></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label for="input-category" class="form-label">📁 Chủ đề</label>
+                        <select id="input-category" class="form-select">
+                            <option value="general">Tổng hợp</option>
+                            <option value="idiom">Thành ngữ</option>
+                            <option value="grammar">Ngữ pháp</option>
+                            <option value="vocabulary">Từ vựng</option>
+                            <option value="conversation">Hội thoại</option>
+                            <option value="business">Kinh doanh</option>
+                            <option value="academic">Học thuật</option>
+                            <option value="slang">Tiếng lóng</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group-half">
+                        <label for="input-source" class="form-label">📖 Nguồn</label>
+                        <input type="text" id="input-source" class="form-input" placeholder="e.g. YouTube, sách, lớp học...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="input-note" class="form-label">📝 Ghi chú thêm</label>
+                    <textarea id="input-note" class="form-textarea" rows="2" placeholder="Ghi chú về ngữ cảnh, cách dùng..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="btn-save">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <polyline points="20,6 9,17 4,12"/>
+                        </svg>
+                        Lưu lại
+                    </button>
+                    <button class="btn btn-ghost" id="btn-clear-form">Xóa form</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter & Timeline -->
+        <section class="timeline-section">
+            <div class="timeline-header">
+                <h2 class="section-title">📅 Dòng thời gian</h2>
+                <div class="filter-pills">
+                    <button class="pill pill-active" data-filter="all">Tất cả</button>
+                    <button class="pill" data-filter="idiom">Thành ngữ</button>
+                    <button class="pill" data-filter="grammar">Ngữ pháp</button>
+                    <button class="pill" data-filter="vocabulary">Từ vựng</button>
+                    <button class="pill" data-filter="conversation">Hội thoại</button>
+                    <button class="pill" data-filter="business">Kinh doanh</button>
+                    <button class="pill" data-filter="academic">Học thuật</button>
+                    <button class="pill" data-filter="slang">Tiếng lóng</button>
+                </div>
+            </div>
+            <div class="timeline" id="timeline">
+                <!-- Entries will be rendered here -->
+            </div>
+            <div class="empty-state" id="empty-state">
+                <div class="empty-illustration">
+                    <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+                        <circle cx="60" cy="60" r="50" stroke="currentColor" stroke-width="2" stroke-dasharray="8 4" opacity="0.3"/>
+                        <rect x="35" y="30" width="50" height="60" rx="6" stroke="currentColor" stroke-width="2" opacity="0.5"/>
+                        <path d="M45 50h30M45 60h24M45 70h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                        <path d="M72 78l8 8" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+                        <circle cx="68" cy="74" r="10" stroke="currentColor" stroke-width="2" opacity="0.6"/>
+                    </svg>
+                </div>
+                <h3>Chưa có ghi chú nào</h3>
+                <p>Hãy bắt đầu ghi lại những câu tiếng Anh bạn học được mỗi ngày!</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="edit-modal">
+            <div class="modal-header">
+                <h3>✏️ Chỉnh sửa</h3>
+                <button class="btn-icon" id="btn-close-modal">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label class="form-label"><span class="flag">🇬🇧</span> Câu Tiếng Anh</label>
+                    <textarea id="edit-english" class="form-textarea" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><span class="flag">🇻🇳</span> Nghĩa Tiếng Việt</label>
+                    <textarea id="edit-vietnamese" class="form-textarea" rows="2"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-group-half">
+                        <label class="form-label">📁 Chủ đề</label>
+                        <select id="edit-category" class="form-select">
+                            <option value="general">Tổng hợp</option>
+                            <option value="idiom">Thành ngữ</option>
+                            <option value="grammar">Ngữ pháp</option>
+                            <option value="vocabulary">Từ vựng</option>
+                            <option value="conversation">Hội thoại</option>
+                            <option value="business">Kinh doanh</option>
+                            <option value="academic">Học thuật</option>
+                            <option value="slang">Tiếng lóng</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group-half">
+                        <label class="form-label">📖 Nguồn</label>
+                        <input type="text" id="edit-source" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">📝 Ghi chú</label>
+                    <textarea id="edit-note" class="form-textarea" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="btn-cancel-edit">Hủy</button>
+                <button class="btn btn-primary" id="btn-save-edit">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
