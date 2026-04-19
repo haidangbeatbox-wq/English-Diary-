@@ -27,7 +27,7 @@
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 16px 64px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.15);
+    --shadow-glow: 0 4px 20px rgba(99, 102, 241, 0.1);
 
     /* Spacing */
     --radius-sm: 8px;
@@ -75,9 +75,11 @@ body {
 .orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.4;
+    filter: blur(80px);
+    opacity: 0.3;
     animation: orbFloat 20s ease-in-out infinite;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .orb-1 {
@@ -246,8 +248,9 @@ body {
 }
 
 .stat-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(12px);
+    background: rgba(20, 20, 50, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
     padding: 16px;
@@ -307,8 +310,9 @@ body {
 }
 
 .add-entry-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(16px);
+    background: rgba(20, 20, 50, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     padding: 28px;
@@ -609,8 +613,9 @@ body {
 }
 
 .entry-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(12px);
+    background: rgba(20, 20, 50, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
     padding: 18px 20px;
