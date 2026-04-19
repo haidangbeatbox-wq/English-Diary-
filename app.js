@@ -69,6 +69,12 @@
         btnCancelEdit: $('#btn-cancel-edit'),
         btnSaveEdit: $('#btn-save-edit'),
 
+        // Image Support
+        inputImage: $('#input-image'),
+        imagePreviewContainer: $('#image-preview-container'),
+        editImage: $('#edit-image'),
+        editImagePreviewContainer: $('#edit-image-preview-container'),
+
         // Toast
         toastContainer: $('#toast-container'),
     };
@@ -77,6 +83,8 @@
     let entries = [];
     let activeFilter = 'all';
     let searchQuery = '';
+    let tempImageData = null; // For new entry
+    let editTempImageData = null; // For edit modal
 
     // ── Helpers ──
     function generateId() {
@@ -119,6 +127,65 @@
         const escaped = escapeHtml(text);
         const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
         return escaped.replace(regex, '<mark>$1</mark>');
+    }
+
+    async function processImage(file) {
+        return new Promise((resolve, reject) => {
+            if (!file.type.startsWith('image/')) {
+                reject(new Error('Vui lòng chọn tệp hình ảnh!'));
+                return;
+            }
+
+            const MAX_WIDTH = 800; // Max width to save storage
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Reduced quality to save even more space (0.7)
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function renderImagePreview(dataUrl, container, type = 'add') {
+        container.innerHTML = `
+            <div class="image-preview">
+                <img src="${dataUrl}" alt="Preview">
+                <button class="btn-remove-image" title="Xóa ảnh">×</button>
+            </div>
+        `;
+
+        container.querySelector('.btn-remove-image').addEventListener('click', () => {
+            if (type === 'add') {
+                tempImageData = null;
+                els.inputImage.value = '';
+            } else {
+                editTempImageData = null;
+                els.editImage.value = '';
+            }
+            container.innerHTML = '';
+        });
     }
 
     // ── Storage ──
@@ -305,6 +372,11 @@
                             <span class="entry-time">🕐 ${formatTime(entry.created)}</span>
                         </div>
                         ${entry.note ? `<div class="entry-note">${highlightText(entry.note, searchQuery)}</div>` : ''}
+                        ${entry.image ? `
+                            <div class="entry-image-container">
+                                <img src="${entry.image}" class="entry-image" alt="Entry image" loading="lazy">
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             });
@@ -345,6 +417,7 @@
             category: els.inputCategory.value,
             source: els.inputSource.value.trim(),
             note: els.inputNote.value.trim(),
+            image: tempImageData,
             date: getTodayStr(),
             created: new Date().toISOString(),
         };
@@ -370,6 +443,9 @@
         els.inputCategory.value = 'general';
         els.inputSource.value = '';
         els.inputNote.value = '';
+        tempImageData = null;
+        els.imagePreviewContainer.innerHTML = '';
+        els.inputImage.value = '';
         els.inputEnglish.focus();
     }
 
@@ -407,6 +483,13 @@
         els.editCategory.value = entry.category;
         els.editSource.value = entry.source || '';
         els.editNote.value = entry.note || '';
+        
+        editTempImageData = entry.image || null;
+        if (editTempImageData) {
+            renderImagePreview(editTempImageData, els.editImagePreviewContainer, 'edit');
+        } else {
+            els.editImagePreviewContainer.innerHTML = '';
+        }
 
         els.modalOverlay.classList.add('active');
         setTimeout(() => els.editEnglish.focus(), 200);
@@ -432,6 +515,7 @@
         entry.category = els.editCategory.value;
         entry.source = els.editSource.value.trim();
         entry.note = els.editNote.value.trim();
+        entry.image = editTempImageData;
 
         saveEntries();
         renderTimeline();
@@ -585,6 +669,30 @@
         els.btnCloseModal.addEventListener('click', closeEditModal);
         els.btnCancelEdit.addEventListener('click', closeEditModal);
         els.btnSaveEdit.addEventListener('click', saveEdit);
+
+        // Image Handling
+        els.inputImage.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                tempImageData = await processImage(file);
+                renderImagePreview(tempImageData, els.imagePreviewContainer, 'add');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+
+        els.editImage.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                editTempImageData = await processImage(file);
+                renderImagePreview(editTempImageData, els.editImagePreviewContainer, 'edit');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+
         els.modalOverlay.addEventListener('click', (e) => {
             if (e.target === els.modalOverlay) closeEditModal();
         });
