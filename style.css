@@ -1076,3 +1076,68 @@ mark {
     filter: brightness(1.1);
 }
 
+/* ===== Voice Recording ===== */
+.audio-upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#btn-record, #btn-edit-record {
+    width: fit-content;
+    position: relative;
+    padding-left: 40px;
+}
+
+.record-dot {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    background: #ef4444;
+    border-radius: 50%;
+}
+
+.recording#btn-record .record-dot, 
+.recording#btn-edit-record .record-dot {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: translateY(-50%) scale(1); opacity: 1; }
+    50% { transform: translateY(-50%) scale(1.5); opacity: 0.5; }
+    100% { transform: translateY(-50%) scale(1); opacity: 1; }
+}
+
+.audio-preview-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeSlideIn 0.3s ease-out;
+}
+
+audio {
+    height: 36px;
+    border-radius: var(--radius-sm);
+    filter: invert(100%) hue-rotate(180deg) brightness(1.5);
+}
+
+.audio-preview-container .btn-remove-image {
+    position: static;
+    flex-shrink: 0;
+}
+
+/* Timeline Audio */
+.entry-audio {
+    margin-top: 12px;
+    width: 100%;
+}
+
+.entry-audio audio {
+    width: 100%;
+    max-width: 300px;
+}
+
+

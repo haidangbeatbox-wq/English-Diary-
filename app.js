@@ -75,6 +75,14 @@
         editImage: $('#edit-image'),
         editImagePreviewContainer: $('#edit-image-preview-container'),
 
+        // Voice Recording
+        btnRecord: $('#btn-record'),
+        recordText: $('#record-text'),
+        audioPreviewContainer: $('#audio-preview-container'),
+        btnEditRecord: $('#btn-edit-record'),
+        editRecordText: $('#edit-record-text'),
+        editAudioPreviewContainer: $('#edit-audio-preview-container'),
+
         // Toast
         toastContainer: $('#toast-container'),
     };
@@ -83,8 +91,14 @@
     let entries = [];
     let activeFilter = 'all';
     let searchQuery = '';
-    let tempImageData = null; // For new entry
-    let editTempImageData = null; // For edit modal
+    let tempImageData = null; 
+    let editTempImageData = null;
+    let tempAudioData = null; // For new entry
+    let editTempAudioData = null; // For edit modal
+    
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
 
     // ── Helpers ──
     function generateId() {
@@ -176,14 +190,73 @@
             </div>
         `;
 
-        container.querySelector('.btn-remove-image').addEventListener('click', () => {
-            if (type === 'add') {
-                tempImageData = null;
-                els.inputImage.value = '';
-            } else {
-                editTempImageData = null;
-                els.editImage.value = '';
+            container.innerHTML = '';
+        });
+    }
+
+    async function toggleRecording(type = 'add') {
+        const btn = type === 'add' ? els.btnRecord : els.btnEditRecord;
+        const text = type === 'add' ? els.recordText : els.editRecordText;
+        const container = type === 'add' ? els.audioPreviewContainer : els.editAudioPreviewContainer;
+
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const dataUrl = e.target.result;
+                        if (type === 'add') tempAudioData = dataUrl;
+                        else editTempAudioData = dataUrl;
+                        renderAudioPreview(dataUrl, container, type);
+                    };
+                    reader.readAsDataURL(audioBlob);
+                    
+                    // Stop all tracks to release microphone
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                btn.classList.add('recording', 'btn-danger');
+                text.textContent = 'Dừng ghi âm (Max 30s)';
+                
+                // Auto stop after 30s
+                setTimeout(() => {
+                    if (isRecording) toggleRecording(type);
+                }, 30000);
+
+            } catch (err) {
+                showToast('Không thể truy cập micro!', 'error');
+                console.error(err);
             }
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+            btn.classList.remove('recording', 'btn-danger');
+            text.textContent = type === 'add' ? 'Bắt đầu ghi âm' : 'Ghi âm mới';
+        }
+    }
+
+    function renderAudioPreview(dataUrl, container, type = 'add') {
+        container.innerHTML = `
+            <div class="audio-preview-container">
+                <audio src="${dataUrl}" controls></audio>
+                <button class="btn-remove-image" title="Xóa ghi âm">×</button>
+            </div>
+        `;
+
+        container.querySelector('.btn-remove-image').addEventListener('click', () => {
+            if (type === 'add') tempAudioData = null;
+            else editTempAudioData = null;
             container.innerHTML = '';
         });
     }
@@ -377,6 +450,11 @@
                                 <img src="${entry.image}" class="entry-image" alt="Entry image" loading="lazy">
                             </div>
                         ` : ''}
+                        ${entry.audio ? `
+                            <div class="entry-audio">
+                                <audio src="${entry.audio}" controls></audio>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             });
@@ -418,6 +496,7 @@
             source: els.inputSource.value.trim(),
             note: els.inputNote.value.trim(),
             image: tempImageData,
+            audio: tempAudioData,
             date: getTodayStr(),
             created: new Date().toISOString(),
         };
@@ -446,6 +525,8 @@
         tempImageData = null;
         els.imagePreviewContainer.innerHTML = '';
         els.inputImage.value = '';
+        tempAudioData = null;
+        els.audioPreviewContainer.innerHTML = '';
         els.inputEnglish.focus();
     }
 
@@ -491,6 +572,13 @@
             els.editImagePreviewContainer.innerHTML = '';
         }
 
+        editTempAudioData = entry.audio || null;
+        if (editTempAudioData) {
+            renderAudioPreview(editTempAudioData, els.editAudioPreviewContainer, 'edit');
+        } else {
+            els.editAudioPreviewContainer.innerHTML = '';
+        }
+
         els.modalOverlay.classList.add('active');
         setTimeout(() => els.editEnglish.focus(), 200);
     }
@@ -516,6 +604,7 @@
         entry.source = els.editSource.value.trim();
         entry.note = els.editNote.value.trim();
         entry.image = editTempImageData;
+        entry.audio = editTempAudioData;
 
         saveEntries();
         renderTimeline();
@@ -696,6 +785,10 @@
         els.modalOverlay.addEventListener('click', (e) => {
             if (e.target === els.modalOverlay) closeEditModal();
         });
+
+        // Voice Recording
+        els.btnRecord.addEventListener('click', () => toggleRecording('add'));
+        els.btnEditRecord.addEventListener('click', () => toggleRecording('edit'));
 
         // Keyboard
         document.addEventListener('keydown', handleKeyboard);
