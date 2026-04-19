@@ -190,6 +190,9 @@
             </div>
         `;
 
+        container.querySelector('.btn-remove-image').addEventListener('click', () => {
+            if (type === 'add') tempImageData = null;
+            else editTempImageData = null;
             container.innerHTML = '';
         });
     }
@@ -273,8 +276,11 @@
     function loadEntries() {
         try {
             const data = localStorage.getItem(STORAGE_KEY);
-            entries = data ? JSON.parse(data) : [];
+            const parsed = data ? JSON.parse(data) : [];
+            entries = Array.isArray(parsed) ? parsed : [];
+            console.log("Đã tải " + entries.length + " câu từ bộ nhớ.");
         } catch (e) {
+            console.error("Lỗi khi tải dữ liệu từ localStorage:", e);
             entries = [];
         }
     }
@@ -796,14 +802,26 @@
 
     // ── Init ──
     function init() {
-        loadEntries();
-        displayCurrentDate();
-        updateStats();
-        renderTimeline();
+        console.log("Đang khởi tạo ứng dụng...");
+        
+        // Bind events FIRST so buttons are responsive even if data loading fails
         bindEvents();
+        
+        try {
+            loadEntries();
+            displayCurrentDate();
+            updateStats();
+            renderTimeline();
+        } catch (err) {
+            console.error("Lỗi trong quá trình khởi tạo dữ liệu:", err);
+            showToast("Có lỗi xảy ra khi tải dữ liệu, nhưng bạn vẫn có thể nhập câu mới.", "info");
+        }
 
         // Focus input on load
-        setTimeout(() => els.inputEnglish.focus(), 300);
+        setTimeout(() => {
+            if (els.inputEnglish) els.inputEnglish.focus();
+        }, 300);
+        console.log("Ứng dụng đã sẵn sàng!");
     }
 
     // Start app
