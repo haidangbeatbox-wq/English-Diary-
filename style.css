@@ -1303,4 +1303,166 @@ body.logged-in .auth-note {
     display: none;
 }
 
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 0 16px;
+    }
+
+    .logo-text h1 {
+        font-size: 1.2rem;
+    }
+
+    .logo-sub {
+        font-size: 0.65rem;
+    }
+
+    .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 12px;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    .add-entry-card {
+        padding: 20px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .form-group-half {
+        width: 100%;
+    }
+
+    .entry-list {
+        padding-left: 40px;
+    }
+
+    .timeline::before {
+        left: 14px;
+    }
+
+    .day-dot {
+        width: 30px;
+        height: 30px;
+    }
+
+    .day-header {
+        gap: 12px;
+    }
+
+    .entry-card {
+        padding: 15px;
+    }
+
+    .entry-english {
+        font-size: 1rem;
+        padding-right: 40px; /* Space for actions */
+    }
+
+    .entry-actions {
+        opacity: 1; /* Always visible on mobile */
+        top: 10px;
+        right: 10px;
+    }
+
+    .filter-pills {
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none; /* Hide scrollbar for Firefox */
+    }
+
+    .filter-pills::-webkit-scrollbar {
+        display: none; /* Hide scrollbar for Chrome/Safari */
+    }
+
+    .pill {
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        height: auto;
+        padding: 10px 0;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .search-wrapper.active .search-input {
+        width: 140px;
+    }
+
+    .stats-bar {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 10px 16px;
+    }
+
+    .add-entry-card {
+        padding: 16px;
+    }
+
+    .entry-list {
+        padding-left: 20px;
+    }
+
+    .timeline::before {
+        display: none;
+    }
+
+    .day-dot {
+        display: none;
+    }
+
+    .day-header {
+        margin-left: 0;
+        padding-left: 4px;
+        border-left: 3px solid var(--accent-primary);
+    }
+
+    .entry-meta {
+        gap: 8px;
+    }
+
+    .entry-actions {
+        position: static;
+        margin-bottom: 10px;
+        justify-content: flex-end;
+    }
+
+    .entry-english {
+        padding-right: 0;
+    }
+
+    .modal {
+        padding: 0;
+        border-radius: var(--radius-md);
+    }
+
+    .auth-form-container {
+        padding: 20px;
+    }
+
+    .auth-header h3 {
+        font-size: 1.2rem;
+    }
+}
+
 
