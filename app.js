@@ -79,6 +79,17 @@
 
         // Toast
         toastContainer: $('#toast-container'),
+
+        // Auth
+        btnUserAuth: $('#btn-user-auth'),
+        displayUsername: $('#display-username'),
+        btnLogout: $('#btn-logout'),
+        authModalOverlay: $('#auth-modal-overlay'),
+        authTabs: $$('.auth-tab'),
+        authForms: $$('.auth-form-container'),
+        loginForm: $('#login-form'),
+        signupForm: $('#signup-form'),
+        btnCloseAuth: $('#btn-close-auth'),
     };
 
     // ── State ──
@@ -87,6 +98,7 @@
     let searchQuery = '';
     let tempImageData = null; 
     let editTempImageData = null;
+    let currentUser = null; 
 
 
     // ── Helpers ──
@@ -189,9 +201,13 @@
 
 
     // ── Storage ──
+    function getUserStorageKey() {
+        return currentUser ? `diary_entries_${currentUser.username}` : STORAGE_KEY;
+    }
+
     function saveEntries() {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+            localStorage.setItem(getUserStorageKey(), JSON.stringify(entries));
         } catch (e) {
             showToast('Lỗi lưu dữ liệu!', 'error');
         }
@@ -199,12 +215,13 @@
 
     function loadEntries() {
         try {
-            const data = localStorage.getItem(STORAGE_KEY);
+            const key = getUserStorageKey();
+            const data = localStorage.getItem(key);
             const parsed = data ? JSON.parse(data) : [];
             entries = Array.isArray(parsed) ? parsed : [];
-            console.log("Đã tải " + entries.length + " câu từ bộ nhớ.");
+            console.log(`Đã tải ${entries.length} câu từ ${key}.`);
         } catch (e) {
-            console.error("Lỗi khi tải dữ liệu từ localStorage:", e);
+            console.error("Lỗi khi tải dữ liệu:", e);
             entries = [];
         }
     }
@@ -608,6 +625,135 @@
         reader.readAsText(file);
     }
 
+    // ── Authentication Logic ──
+    const USERS_KEY = 'english_diary_users';
+    const SESSION_KEY = 'english_diary_session';
+
+    function openAuthModal() {
+        els.authModalOverlay.classList.add('active');
+        switchAuthTab('login');
+    }
+
+    function closeAuthModal() {
+        els.authModalOverlay.classList.remove('active');
+    }
+
+    function switchAuthTab(tab) {
+        els.authTabs.forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === tab);
+        });
+        els.authForms.forEach(f => {
+            f.classList.toggle('active', f.id === `${tab}-form-container`);
+        });
+    }
+
+    function getUsers() {
+        const data = localStorage.getItem(USERS_KEY);
+        return data ? JSON.parse(data) : {};
+    }
+
+    function saveUsers(users) {
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+
+    function handleSignup(e) {
+        e.preventDefault();
+        const username = $('#signup-username').value.trim().toLowerCase();
+        const password = $('#signup-password').value;
+        const confirm = $('#signup-password-confirm').value;
+
+        if (!username || !password) {
+            showToast('Vui lòng điền đầy đủ thông tin!', 'error');
+            return;
+        }
+
+        if (password !== confirm) {
+            showToast('Mật khẩu xác nhận không khớp!', 'error');
+            return;
+        }
+
+        const users = getUsers();
+        if (users[username]) {
+            showToast('Tên đăng nhập đã tồn tại!', 'error');
+            return;
+        }
+
+        users[username] = { username, password, created: new Date().toISOString() };
+        saveUsers(users);
+
+        showToast('Đăng ký thành công! Đang chuyển dữ liệu...', 'success');
+        
+        // Auto migrate data if any exists in local storage
+        migrateDataToUser(username);
+        
+        loginUser(users[username]);
+        closeAuthModal();
+    }
+
+    function handleLogin(e) {
+        e.preventDefault();
+        const username = $('#login-username').value.trim().toLowerCase();
+        const password = $('#login-password').value;
+
+        const users = getUsers();
+        const user = users[username];
+
+        if (user && user.password === password) {
+            showToast(`Chào mừng trở lại, ${username}! 👋`);
+            loginUser(user);
+            closeAuthModal();
+        } else {
+            showToast('Tên đăng nhập hoặc mật khẩu không đúng!', 'error');
+        }
+    }
+
+    function loginUser(user) {
+        currentUser = user;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+        document.body.classList.add('logged-in');
+        els.displayUsername.textContent = user.username;
+        loadEntries();
+        updateStats();
+        renderTimeline();
+    }
+
+    function handleLogout() {
+        if (!confirm('Bạn có chắc chắn muốn đăng xuất?')) return;
+        currentUser = null;
+        localStorage.removeItem(SESSION_KEY);
+        document.body.classList.remove('logged-in');
+        els.displayUsername.textContent = 'Khách';
+        loadEntries(); // Load default storage
+        updateStats();
+        renderTimeline();
+        showToast('Đã đăng xuất.');
+    }
+
+    function checkAuthSession() {
+        const session = localStorage.getItem(SESSION_KEY);
+        if (session) {
+            try {
+                const user = JSON.parse(session);
+                loginUser(user);
+            } catch (e) {
+                localStorage.removeItem(SESSION_KEY);
+            }
+        }
+    }
+
+    function migrateDataToUser(username) {
+        // Move generic data to user-specific data if user has no data yet
+        const genericData = localStorage.getItem(STORAGE_KEY);
+        const userKey = `diary_entries_${username}`;
+        
+        if (genericData && !localStorage.getItem(userKey)) {
+            localStorage.setItem(userKey, genericData);
+            // We don't remove generic data immediately to be safe, 
+            // but we could if we wanted a clean migration.
+            console.log(`Đã chuyển dữ liệu từ khách vào tài khoản ${username}`);
+        }
+    }
+
     // ── Display current date ──
     function displayCurrentDate() {
         const now = new Date();
@@ -709,6 +855,21 @@
 
         // Keyboard
         document.addEventListener('keydown', handleKeyboard);
+
+        // Auth Events
+        els.btnUserAuth.addEventListener('click', () => {
+            if (!currentUser) openAuthModal();
+        });
+        els.btnLogout.addEventListener('click', handleLogout);
+        els.btnCloseAuth.addEventListener('click', closeAuthModal);
+        els.authTabs.forEach(tab => {
+            tab.addEventListener('click', () => switchAuthTab(tab.dataset.tab));
+        });
+        els.loginForm.addEventListener('submit', handleLogin);
+        els.signupForm.addEventListener('submit', handleSignup);
+        els.authModalOverlay.addEventListener('click', (e) => {
+            if (e.target === els.authModalOverlay) closeAuthModal();
+        });
     }
 
     // ── Init ──
@@ -719,7 +880,9 @@
         bindEvents();
         
         try {
-            loadEntries();
+            checkAuthSession(); // This will call loadEntries() if session exists
+            if (!currentUser) loadEntries(); // Load default if no user
+            
             displayCurrentDate();
             updateStats();
             renderTimeline();
